@@ -1,0 +1,48 @@
+{
+  "captacion_cliente": {
+    "event_id": "evt-lead-001",
+    "name": "Ana Martínez",
+    "email": "ana.demo@example.com",
+    "company": "Comercio Demo",
+    "interest": "automatización de ventas",
+    "source": "formulario_web"
+  },
+  "solicitud_cita": {
+    "request_id": "apt-demo-001",
+    "name": "Carlos Demo",
+    "email": "carlos.demo@example.com",
+    "requested_date": "2026-10-15",
+    "requested_time": "10:30",
+    "timezone": "America/Bogota",
+    "service": "consultoría inicial"
+  },
+  "factura": {
+    "document_id": "invoice-demo-001",
+    "supplier": "Proveedor Demo S.L.",
+    "invoice_number": "FAC-DEMO-1001",
+    "date": "2026-09-01",
+    "currency": "EUR",
+    "subtotal": 100.0,
+    "tax": 21.0,
+    "total": 121.0
+  },
+  "ventas": [
+    {"date": "2026-08-28", "channel": "web", "amount": 120.5},
+    {"date": "2026-08-29", "channel": "web", "amount": 89.0},
+    {"date": "2026-08-30", "channel": "partner", "amount": 210.0}
+  ],
+  "pregunta_asistente": {
+    "question": "¿Cuál es el plazo de respuesta para una solicitud prioritaria?",
+    "document_context": "Las solicitudes prioritarias reciben una primera respuesta en un máximo de 4 horas laborables."
+  },
+  "pedido_erp": {
+    "event_id": "order-demo-001",
+    "order_id": "ORD-DEMO-1001",
+    "customer_id": "CUS-DEMO-01",
+    "items": [
+      {"sku": "SKU-DEMO-01", "quantity": 2, "unit_price": 19.9},
+      {"sku": "SKU-DEMO-02", "quantity": 1, "unit_price": 7.5}
+    ],
+    "currency": "EUR"
+  }
+}
