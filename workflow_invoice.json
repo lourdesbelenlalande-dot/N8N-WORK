@@ -1,0 +1,80 @@
+{
+  "name": "Portfolio 03 - Procesamiento de facturas",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portfolio/invoices",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "03000000-0000-4000-8000-000000000001",
+      "name": "Webhook - Entrada",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const output = [];\nfor (const item of $input.all()) {\n  const input = item.json.body ?? item.json;\n  const errors = [];\n  if (!input || typeof input !== 'object') errors.push('payload must be an object');\n  const eventId = input?.event_id ?? input?.request_id ?? `demo-${Date.now()}`;\n  if (!input?.email && 'invoice' === 'appointment') errors.push('email is required');\n  if (!input?.question && 'invoice' === 'question') errors.push('question is required');\n  if (!input?.order_id && 'invoice' === 'order') errors.push('order_id is required');\n  if (!input?.invoice_number && 'invoice' === 'invoice') errors.push('invoice_number is required');\n  if (errors.length) {\n    output.push({json: {ok: false, event_id: eventId, errors}});\n    continue;\n  }\n  let result = {ok: true, event_id: eventId, workflow: 'invoice', processed_at: new Date().toISOString()};\n  if ('invoice' === 'report') {\n    const rows = Array.isArray(input) ? input : (input.sales ?? []);\n    const total = rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);\n    result.metrics = {count: rows.length, total: Number(total.toFixed(2)), average: rows.length ? Number((total / rows.length).toFixed(2)) : 0, alert: rows.length > 0 && total < 100};\n  } else if ('invoice' === 'question') {\n    result.answer = input.document_context ? input.document_context : 'No encontré información suficiente en el contexto proporcionado.';\n    result.grounded = Boolean(input.document_context);\n  } else if ('invoice' === 'invoice') {\n    const expected = Number(input.subtotal ?? 0) + Number(input.tax ?? 0);\n    result.invoice = {...input, validation: {expected_total: Number(expected.toFixed(2)), matches: Math.abs(expected - Number(input.total ?? 0)) < 0.01}};\n  } else if ('invoice' === 'order') {\n    const items = Array.isArray(input.items) ? input.items : [];\n    result.order = {...input, total: Number(items.reduce((s, x) => s + Number(x.quantity ?? 0) * Number(x.unit_price ?? 0), 0).toFixed(2))};\n  } else {\n    result.record = input;\n    result.next_action = 'invoice' === 'appointment' ? 'Check calendar availability and send confirmation' : 'Continue with the next business system';\n  }\n  output.push({json: result});\n}\nreturn output;"
+      },
+      "id": "03000000-0000-4000-8000-000000000002",
+      "name": "Code - Procesar datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "03000000-0000-4000-8000-000000000003",
+      "name": "Respond to Webhook - Resultado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        780,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Entrada": {
+      "main": [
+        [
+          {
+            "node": "Code - Procesar datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code - Procesar datos": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook - Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
