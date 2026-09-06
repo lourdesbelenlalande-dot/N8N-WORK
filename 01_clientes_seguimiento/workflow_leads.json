@@ -1,0 +1,53 @@
+{
+  "name": "Portfolio 01 - Captación y seguimiento de leads",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portfolio/leads",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "2b8b6a3e-2e1d-4b4d-9b76-5e2f6c5a2c01",
+      "name": "Webhook - Nuevo lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [260, 300]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const output = [];\nfor (const item of $input.all()) {\n  const body = item.json.body ?? item.json;\n  const eventId = body.event_id ?? `demo-${Date.now()}`;\n  const name = String(body.name ?? '').trim();\n  const email = String(body.email ?? '').trim().toLowerCase();\n  const company = String(body.company ?? '').trim();\n  const errors = [];\n  if (!name) errors.push('name is required');\n  if (!email || !email.includes('@')) errors.push('valid email is required');\n  if (errors.length) {\n    output.push({ json: { ok: false, event_id: eventId, errors } });\n    continue;\n  }\n  output.push({ json: {\n    ok: true, event_id: eventId,\n    lead: { name, email, company, interest: body.interest ?? null, source: body.source ?? 'unknown' },\n    next_action: 'Create CRM record and schedule follow-up within 24 hours',\n    processed_at: new Date().toISOString()\n  }});\n}\nreturn output;"
+      },
+      "id": "6e9fdf37-1ef0-4ba2-9fc9-3a7fa9a6a002",
+      "name": "Code - Validar y normalizar lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "9bdf9de8-5891-47b1-aafa-7e3e312d3003",
+      "name": "Respond to Webhook - Resultado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [780, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Nuevo lead": {
+      "main": [[{"node": "Code - Validar y normalizar lead", "type": "main", "index": 0}]]
+    },
+    "Code - Validar y normalizar lead": {
+      "main": [[{"node": "Respond to Webhook - Resultado", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "tags": []
+}
